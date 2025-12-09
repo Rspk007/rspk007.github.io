@@ -1,125 +1,36 @@
 <!DOCTYPE html>
-<html lang="hu">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Tolvaj Számláló</title>
+    <title>Thieving Counter</title>
     <style>
-        /* Alt1 stílus - sötét téma, hogy illeszkedjen a játékhoz */
-        body {
-            background-color: #111;
-            color: #ddd;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            margin: 0; padding: 10px; font-size: 12px;
-        }
-        .container { display: flex; gap: 5px; text-align: center; }
-        .box { 
-            flex: 1; 
-            background: #222; 
-            border: 1px solid #444; 
-            padding: 5px; 
-            border-radius: 4px; 
-        }
-        .value { font-size: 20px; font-weight: bold; display: block; }
-        .success { color: #6f6; }
-        .fail { color: #f66; }
-        button {
-            width: 100%; margin-top: 10px; padding: 5px;
-            background: #333; color: white; border: 1px solid #555; cursor: pointer;
-        }
-        button:hover { background: #444; }
-        #status { margin-top: 8px; color: #888; font-style: italic; }
+        body { background: #222; color: #fff; font-family: sans-serif; text-align: center; }
+        .box { display: inline-block; width: 45%; border: 1px solid #555; padding: 5px; margin: 2px; }
+        .num { font-size: 20px; font-weight: bold; display: block; }
+        #success-count { color: #0f0; }
+        #fail-count { color: #f00; }
+        button { margin-top: 10px; padding: 5px 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div>
         <div class="box">
-            <span id="succ" class="value success">0</span>
+            <span id="success-count" class="num">0</span>
             Siker
         </div>
         <div class="box">
-            <span id="fail" class="value fail">0</span>
-            Bukta
+            <span id="fail-count" class="num">0</span>
+            Fail
         </div>
     </div>
-    
-    <button onclick="reset()">Nullázás</button>
-    <div id="status">Indítás...</div>
+
+    <button onclick="resetTracker()">Reset</button>
 
     <script src="https://www.unpkg.com/alt1/dist/base/index.js"></script>
     <script src="https://www.unpkg.com/alt1/dist/ocr/index.js"></script>
     <script src="https://www.unpkg.com/alt1/dist/chatbox/index.js"></script>
 
-    <script>
-        let reader = new ChatBoxReader();
-        let succCount = 0;
-        let failCount = 0;
+    <script src="scripts/script.js"></script> 
 
-        // 1. App azonosítása (Ez köti össze a JSON fájllal)
-        if (window.alt1) {
-            alt1.identifyAppUrl("./appconfig.json");
-        }
-
-        function updateUI() {
-            document.getElementById('succ').innerText = succCount;
-            document.getElementById('fail').innerText = failCount;
-        }
-
-        function reset() {
-            succCount = 0; failCount = 0;
-            updateUI();
-        }
-
-        function startTracking() {
-            if (!window.alt1) {
-                document.getElementById('status').innerText = "Nincs Alt1 észlelve.";
-                return;
-            }
-
-            // Keresse meg a chatboxot a képernyőn
-            // Fontos: A játéknak látszódnia kell hozzá!
-            let pos = reader.find();
-
-            if (pos) {
-                document.getElementById('status').innerText = "Chatbox megtalálva!";
-                
-                // OCR beállítások finomhangolása (RS3 betűtípus)
-                reader.readargs = {
-                    colors: [
-                        a1lib.mixcolor(255, 255, 255), // Fehér szöveg
-                        a1lib.mixcolor(127, 169, 255)  // Rendszerüzenet kék (néha kellhet)
-                    ]
-                };
-
-                setInterval(readLoop, 600); // 1 tick = 600ms
-            } else {
-                document.getElementById('status').innerText = "Nem találom a chatet. Próbálom újra...";
-                setTimeout(startTracking, 3000);
-            }
-        }
-
-        function readLoop() {
-            let lines = reader.read();
-            if (!lines) return;
-
-            for (let line of lines) {
-                let text = line.text;
-                
-                // Szűrési logika
-                if (text.includes("You pick the") && text.includes("pocket")) {
-                    succCount++;
-                    updateUI();
-                } 
-                else if (text.includes("You fail to pick")) {
-                    failCount++;
-                    updateUI();
-                }
-            }
-        }
-
-        // Indítás
-        window.onload = startTracking;
-    </script>
 </body>
 </html>
-
