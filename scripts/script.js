@@ -1,52 +1,50 @@
-// Változók inicializálása
-let reader = new Chatbox.default();
+// Alt1 alkalmazás azonosítása
+if (window.alt1) {
+    alt1.identifyAppUrl("./appconfig.json");
+}
+
+// Változók beállítása
+var reader = new ChatBoxReader();
 reader.readargs = {
     colors: [
-        a1lib.mixcolor(255, 255, 255), // Fehér szöveg (általános)
-        a1lib.mixcolor(127, 169, 255), // Kék rendszerüzenet (néha ez a pickup szöveg színe)
-        a1lib.mixcolor(255, 0, 0)      // Piros (ha esetleg stun/fail üzenet piros lenne)
+        a1lib.mixcolor(255, 255, 255), // Fehér szöveg (sima chat)
+        a1lib.mixcolor(127, 169, 255), // Kék rendszerüzenet
+        a1lib.mixcolor(255, 0, 0)      // Piros (ha a fail üzenet piros lenne)
     ]
 };
 
-// Állapot tárolása
+// Állapot tároló (State)
 var state = {
     success: 0,
     fail: 0
 };
 
-// Betöltéskor fusson le
+// --- INDÍTÁS ---
 window.onload = function () {
-    // Ellenőrizzük, hogy van-e Alt1
-    if (window.alt1) {
-        alt1.identifyAppUrl("./appconfig.json");
-    } else {
-        console.log("Alt1 nem található (böngésző mód)");
-    }
-
-    // Korábbi adatok visszatöltése (ha van mentve)
+    // 1. Korábbi mentés betöltése
     loadState();
     updateUI();
 
-    // Chat keresés indítása
-    startChatReader();
+    // 2. Chatbox keresése
+    findChat();
 };
 
-function startChatReader() {
-    // Megpróbáljuk megtalálni a chatboxot
+function findChat() {
     if (!reader.pos) {
         var pos = reader.find();
         if (pos) {
             console.log("Chatbox megtalálva!");
             // Ha megvan, indítjuk a figyelést (600ms = 1 game tick)
+            // Az eredeti kód bonyolult időzítője helyett ez stabilabb:
             setInterval(readChat, 600);
         } else {
             console.log("Chatbox keresése...");
-            // Ha nincs meg, próbáljuk újra 1 mp múlva
-            setTimeout(startChatReader, 1000);
+            setTimeout(findChat, 1000);
         }
     }
 }
 
+// --- FŐ LOGIKA ---
 function readChat() {
     var lines = reader.read();
     
@@ -56,7 +54,7 @@ function readChat() {
     for (var i = 0; i < lines.length; i++) {
         var text = lines[i].text;
 
-        // --- LOGIKA ITT KEZDŐDIK ---
+        // Eredeti bonyolult "CheckLine" helyett egyszerűsített keresés:
         
         // 1. SIKERTELEN (Fail)
         // Üzenet: "You fail to pick the ...'s pocket."
@@ -77,26 +75,23 @@ function readChat() {
     }
 }
 
-// UI Frissítése
+// --- UI FRISSÍTÉS ---
+// Az eredeti bonyolult "buildTable" helyett csak a számokat írjuk át
 function updateUI() {
-    // Ezeknek az ID-knak kell szerepelnie a HTML-ben!
+    // Ha léteznek az elemek a HTML-ben, frissítjük őket
     var successEl = document.getElementById('success-count');
     var failEl = document.getElementById('fail-count');
     
-    // XP/Hr vagy Success rate számítás (opcionális extra)
-    var total = state.success + state.fail;
-    var rate = total > 0 ? Math.round((state.success / total) * 100) : 0;
-
-    if (successEl) successEl.innerText = state.success; // + ` (${rate}%)`; ha akarod a százalékot
+    if (successEl) successEl.innerText = state.success;
     if (failEl) failEl.innerText = state.fail;
 }
 
-// Mentés a böngésző memóriájába (localStorage)
+// --- MENTÉS KEZELÉS ---
 function saveState() {
+    // LocalStorage használata, hogy ne vesszen el frissítéskor
     localStorage.setItem('thieving_tracker_state', JSON.stringify(state));
 }
 
-// Betöltés
 function loadState() {
     var saved = localStorage.getItem('thieving_tracker_state');
     if (saved) {
@@ -104,11 +99,14 @@ function loadState() {
             state = JSON.parse(saved);
         } catch (e) {
             console.error("Hiba a mentés betöltésekor", e);
+            // Ha hibás a mentés, alaphelyzetbe állítjuk
+            state = { success: 0, fail: 0 };
         }
     }
 }
 
-// Reset gomb funkció (ezt kösd be a gombodra a HTML-ben: onclick="resetTracker()")
+// --- NULLÁZÁS ---
+// Ezt a függvényt hívja meg a "Reset" gomb a HTML-ben
 function resetTracker() {
     state.success = 0;
     state.fail = 0;
