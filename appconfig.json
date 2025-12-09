@@ -1,0 +1,12 @@
+{
+  "appName": "Tolvaj Számláló",
+  "appUrl": "index.html",
+  "appIcon": "",
+  "id": "thieving_tracker_v1",
+  "description": "Számolja a sikeres és sikertelen lopásokat.",
+  "developers": "TeNeved",
+  "permissions": [
+    "pixel", 
+    "gamemessage"
+  ]
+}
